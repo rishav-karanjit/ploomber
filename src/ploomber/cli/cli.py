@@ -340,3 +340,16 @@ def nb():
     """Manage scripts and notebooks
     """
     pass  # pragma: no cover
+
+
+from ploomber.cloud import pkg
+
+
+@cli.group()
+def cloud():
+    pass
+
+
+@cloud.command()
+def build():
+    pkg.upload_project()
