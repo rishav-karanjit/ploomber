@@ -1,6 +1,7 @@
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber.telemetry import telemetry
+from ploomber.cloud import pkg
 
 # TODO: we are just smoke testing this, we need to improve the tests
 # (check the appropriate functions are called)
@@ -55,7 +56,15 @@ def _task_cli(accept_task_id=False):
     no_flags = not any((args.build, args.status, args.source, args.on_finish))
 
     if no_flags or args.build:
-        task.build(force=args.force)
+        try:
+            task.build(force=args.force)
+        except Exception:
+            if args.task_id:
+                pkg.tasks_update(args.task_id, 'failed')
+            raise
+        else:
+            if args.task_id:
+                pkg.tasks_update(args.task_id, 'finished')
 
 
 @cli_endpoint
