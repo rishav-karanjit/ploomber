@@ -18,6 +18,41 @@ def _get_api_key():
     return API_KEY
 
 
+def _headers():
+    return {
+        'Authorization': _get_api_key(),
+        'Content-Type': 'application/json'
+    }
+
+
+def runs_new(dag):
+    return requests.post(f'{HOST}/runs/new',
+                         headers=_headers(),
+                         json=list(dag)).json()
+
+
+def runs():
+    return requests.get(f'{HOST}/runs', headers=_headers()).json()
+
+
+def tasks_update(task_id, status):
+    return requests.get(f'{HOST}/tasks/{task_id}/{status}',
+                        headers=_headers()).json()
+
+
+def run_detail(run_id):
+    return requests.get(f'{HOST}/runs/{run_id}', headers=_headers()).json()
+
+
+def products_list():
+    return requests.get(f'{HOST}/products', headers=_headers()).json()
+
+
+def products_download(pattern):
+    return requests.get(f'{HOST}/products/{pattern}',
+                        headers=_headers()).json()
+
+
 def zip_project():
     if Path('project.zip').exists():
         click.secho('Deleting existing project.zip...', fg='yellow')
