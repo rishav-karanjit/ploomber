@@ -367,3 +367,9 @@ def cloud_detail(run_id):
 @cloud.command(name="products")
 def cloud_products():
     pkg.products_list()
+
+
+@cloud.command(name="download")
+@click.argument('pattern')
+def cloud_download(pattern):
+    pkg.products_download(pattern)
