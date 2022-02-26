@@ -59,12 +59,12 @@ def _task_cli(accept_task_id=False):
         try:
             task.build(force=args.force)
         except Exception:
-            if args.task_id:
-                pkg.tasks_update(args.task_id, 'failed')
+            if getattr(args, 'task_id', None):
+                pkg.tasks_update(getattr(args, 'task_id'), 'failed')
             raise
         else:
-            if args.task_id:
-                pkg.tasks_update(args.task_id, 'finished')
+            if getattr(args, 'task_id', None):
+                pkg.tasks_update(getattr(args, 'task_id'), 'finished')
 
 
 @cli_endpoint
