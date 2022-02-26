@@ -50,6 +50,10 @@ def tasks_update(headers, task_id, status):
     if response.status_code >= 300:
         print(
             f'Failed to update task (status: {response.status_code}): {json_}')
+    else:
+        print(
+            f'Successfully updated task (status: {response.status_code}): {json_}'
+        )
 
     return json_
 
