@@ -10,6 +10,7 @@ from ploomber import cli as cli_module
 from ploomber import scaffold as _scaffold
 from ploomber_scaffold import scaffold as scaffold_project
 from ploomber.telemetry import telemetry
+from ploomber.cloud import pkg
 
 
 @click.group()
@@ -342,14 +343,11 @@ def nb():
     pass  # pragma: no cover
 
 
-from ploomber.cloud import pkg
-
-
 @cli.group()
 def cloud():
     pass
 
 
-@cloud.command()
-def build():
+@cloud.command(name='build')
+def cloud_build():
     pkg.upload_project()

@@ -6,10 +6,9 @@ from ploomber.telemetry import telemetry
 # (check the appropriate functions are called)
 
 
-@cli_endpoint
-@telemetry.log_call('task')
-def main():
+def _task_cli(accept_task_id=False):
     parser = CustomParser(description='Build tasks', prog='ploomber task')
+
     with parser:
         parser.add_argument('task_name')
         parser.add_argument('--source',
@@ -33,6 +32,10 @@ def main():
                             '-of',
                             help='Only execute on_finish hook',
                             action='store_true')
+
+        if accept_task_id:
+            parser.add_argument('--task-id')
+
     dag, args = parser.load_from_entry_point_arg()
 
     dag.render()
@@ -53,3 +56,13 @@ def main():
 
     if no_flags or args.build:
         task.build(force=args.force)
+
+
+@cli_endpoint
+@telemetry.log_call('task')
+def main():
+    _task_cli()
+
+
+if __name__ == '__main__':
+    _task_cli(accept_task_id=True)

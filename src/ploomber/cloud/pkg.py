@@ -7,7 +7,15 @@ import click
 import requests
 
 HOST = 'https://lawqhyo5gl.execute-api.us-east-1.amazonaws.com/api/'
-API_KEY = os.environ['PLOOMBER_CLOUD_KEY']
+
+
+def _get_api_key():
+    API_KEY = os.environ.get('PLOOMBER_CLOUD_KEY')
+
+    if not API_KEY:
+        raise ValueError('missing api key')
+
+    return API_KEY
 
 
 def zip_project():
@@ -24,9 +32,10 @@ def zip_project():
 
 
 def get_presigned_link():
-    return requests.get(f'{HOST}/upload', headers={
-        'Authorization': API_KEY
-    }).json()
+    return requests.get(f'{HOST}/upload',
+                        headers={
+                            'Authorization': _get_api_key()
+                        }).json()
 
 
 def upload_zipped_project(response):
