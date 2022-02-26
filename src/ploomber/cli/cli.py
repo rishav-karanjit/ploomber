@@ -351,3 +351,18 @@ def cloud():
 @cloud.command(name='build')
 def cloud_build():
     pkg.upload_project()
+
+
+@cloud.command(name="build")
+def cloud_build():
+    pkg.upload_project()
+
+
+@cloud.command(name="list")
+def cloud_list():
+    pkg.runs()
+
+
+@cloud.command(name="products")
+def cloud_products():
+    pkg.products_list()
