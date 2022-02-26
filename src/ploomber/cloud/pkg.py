@@ -41,10 +41,9 @@ def runs(headers):
     print(Table.from_dicts(res))
 
 
-@auth_header
-def tasks_update(headers, task_id, status):
-    response = requests.get(f"{HOST}/tasks/{task_id}/{status}",
-                            headers=headers)
+# NOTE: this doesn't need authentication
+def tasks_update(task_id, status):
+    response = requests.get(f"{HOST}/tasks/{task_id}/{status}")
     json_ = response.json()
 
     if response.status_code >= 300:
