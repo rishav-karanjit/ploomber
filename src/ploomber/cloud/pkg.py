@@ -30,8 +30,9 @@ def auth_header(func):
 
 @auth_header
 def runs_new(headers, task_names):
-    return requests.post(f"{HOST}/runs/new", headers=headers,
-                         json=task_names).json()
+    return requests.post(f"{HOST}/runs/new",
+                         headers=headers,
+                         json=list(task_names)).json()
 
 
 @auth_header
@@ -42,13 +43,21 @@ def runs(headers):
 
 @auth_header
 def tasks_update(headers, task_id, status):
-    return requests.get(f"{HOST}/tasks/{task_id}/{status}",
-                        headers=headers).json()
+    response = requests.get(f"{HOST}/tasks/{task_id}/{status}",
+                            headers=headers)
+    json_ = response.json()
+
+    if response.status_code >= 300:
+        print(
+            f'Failed to update task (status: {response.status_code}): {json_}')
+
+    return json_
 
 
 @auth_header
 def run_detail(headers, run_id):
-    return requests.get(f"{HOST}/runs/{run_id}", headers=headers).json()
+    res = requests.get(f"{HOST}/runs/{run_id}", headers=headers).json()
+    print(Table.from_dicts(res['tasks']))
 
 
 @auth_header

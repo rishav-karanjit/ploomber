@@ -358,6 +358,12 @@ def cloud_list():
     pkg.runs()
 
 
+@cloud.command(name="detail")
+@click.argument('run_id')
+def cloud_detail(run_id):
+    pkg.run_detail(run_id)
+
+
 @cloud.command(name="products")
 def cloud_products():
     pkg.products_list()
