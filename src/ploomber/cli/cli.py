@@ -353,11 +353,6 @@ def cloud_build():
     pkg.upload_project()
 
 
-@cloud.command(name="build")
-def cloud_build():
-    pkg.upload_project()
-
-
 @cloud.command(name="list")
 def cloud_list():
     pkg.runs()
