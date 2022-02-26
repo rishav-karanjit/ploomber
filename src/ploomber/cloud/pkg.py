@@ -23,7 +23,7 @@ def auth_header(func):
                 "Content-Type": "application/json"
             }
 
-            func(headers, *args, **kwargs)
+            return func(headers, *args, **kwargs)
 
     return wrapper
 
