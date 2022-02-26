@@ -2,95 +2,107 @@ import os
 from glob import glob
 import zipfile
 from pathlib import Path
+from functools import wraps
 
 import click
 import requests
 
-HOST = 'https://lawqhyo5gl.execute-api.us-east-1.amazonaws.com/api/'
+from ploomber.table import Table
+
+HOST = "https://lawqhyo5gl.execute-api.us-east-1.amazonaws.com/api/"
 
 
-def _get_api_key():
-    API_KEY = os.environ.get('PLOOMBER_CLOUD_KEY')
+def auth_header(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        api_key = os.environ.get("PLOOMBER_CLOUD_KEY")
 
-    if not API_KEY:
-        raise ValueError('missing api key')
+        if api_key:
+            headers = {
+                "Authorization": api_key,
+                "Content-Type": "application/json"
+            }
 
-    return API_KEY
+            func(headers, *args, **kwargs)
 
-
-def _headers():
-    return {
-        'Authorization': _get_api_key(),
-        'Content-Type': 'application/json'
-    }
-
-
-def runs_new(dag):
-    return requests.post(f'{HOST}/runs/new',
-                         headers=_headers(),
-                         json=list(dag)).json()
+    return wrapper
 
 
-def runs():
-    return requests.get(f'{HOST}/runs', headers=_headers()).json()
+@auth_header
+def runs_new(headers, task_names):
+    return requests.post(f"{HOST}/runs/new", headers=headers,
+                         json=task_names).json()
 
 
-def tasks_update(task_id, status):
-    return requests.get(f'{HOST}/tasks/{task_id}/{status}',
-                        headers=_headers()).json()
+@auth_header
+def runs(headers):
+    res = requests.get(f"{HOST}/runs", headers=headers).json()
+    print(Table.from_dicts(res))
 
 
-def run_detail(run_id):
-    return requests.get(f'{HOST}/runs/{run_id}', headers=_headers()).json()
+@auth_header
+def tasks_update(headers, task_id, status):
+    return requests.get(f"{HOST}/tasks/{task_id}/{status}",
+                        headers=headers).json()
 
 
-def products_list():
-    return requests.get(f'{HOST}/products', headers=_headers()).json()
+@auth_header
+def run_detail(headers, run_id):
+    return requests.get(f"{HOST}/runs/{run_id}", headers=headers).json()
 
 
-def products_download(pattern):
-    return requests.get(f'{HOST}/products/{pattern}',
-                        headers=_headers()).json()
+@auth_header
+def products_list(headers):
+    res = requests.get(f"{HOST}/products", headers=headers).json()
+
+    if res:
+        print(Table.from_dicts(res))
+    else:
+        print("No products found.")
+
+
+@auth_header
+def products_download(headers, pattern):
+    return requests.get(f"{HOST}/products/{pattern}", headers=headers).json()
 
 
 def zip_project():
-    if Path('project.zip').exists():
-        click.secho('Deleting existing project.zip...', fg='yellow')
-        Path('project.zip').unlink()
+    if Path("project.zip").exists():
+        click.secho("Deleting existing project.zip...", fg="yellow")
+        Path("project.zip").unlink()
 
-    files = glob('**/*', recursive=True)
+    files = glob("**/*", recursive=True)
 
     # TODO: ignore __pycache__, ignore .git directory
-    with zipfile.ZipFile('project.zip', 'w', zipfile.ZIP_DEFLATED) as zip:
+    with zipfile.ZipFile("project.zip", "w", zipfile.ZIP_DEFLATED) as zip:
         for path in files:
             zip.write(path, arcname=path)
 
 
-def get_presigned_link():
-    return requests.get(f'{HOST}/upload',
-                        headers={
-                            'Authorization': _get_api_key()
-                        }).json()
+@auth_header
+def get_presigned_link(headers):
+    return requests.get(f"{HOST}/upload", headers=headers).json()
 
 
 def upload_zipped_project(response):
-    object_name = 'project.zip'
-
-    with open(object_name, 'rb') as f:
-        files = {'file': (object_name, f)}
-        http_response = requests.post(response['url'],
-                                      data=response['fields'],
+    with open("project.zip", "rb") as f:
+        files = {"file": f}
+        http_response = requests.post(response["url"],
+                                      data=response["fields"],
                                       files=files)
 
     if http_response.status_code != 204:
-        raise ValueError(f'An error happened: {http_response}')
+        raise ValueError(f"An error happened: {http_response}")
 
-    click.secho('Uploaded project, starting execution...', fg='green')
+    click.secho("Uploaded project, starting execution...", fg="green")
 
 
 def upload_project():
-    click.echo('Zipping project...')
+    if not Path("requirements.lock.txt").exists():
+        raise ValueError("missing requirements.lock.txt")
+
+    click.echo("Zipping project...")
     zip_project()
-    click.echo('Uploading project...')
+    click.echo("Uploading project...")
     response = get_presigned_link()
     upload_zipped_project(response)
