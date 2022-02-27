@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from urllib.request import urlretrieve
 from urllib import parse
@@ -8,6 +9,7 @@ import zipfile
 from pathlib import Path
 from functools import wraps
 from datetime import datetime
+import json
 
 import click
 import requests
@@ -60,10 +62,9 @@ def auth_header(func):
 
 
 @auth_header
-def runs_new(headers, task_names):
-    return requests.post(f"{HOST}/runs/new",
-                         headers=headers,
-                         json=list(task_names)).json()
+def runs_new(headers, graph):
+    return requests.post(f"{HOST}/runs/new", headers=headers,
+                         json=graph).json()
 
 
 @auth_header
@@ -117,7 +118,7 @@ def products_download(headers, pattern):
     download_from_presigned(res)
 
 
-def zip_project():
+def zip_project(force):
     if Path("project.zip").exists():
         click.secho("Deleting existing project.zip...", fg="yellow")
         Path("project.zip").unlink()
@@ -128,6 +129,8 @@ def zip_project():
     with zipfile.ZipFile("project.zip", "w", zipfile.ZIP_DEFLATED) as zip:
         for path in files:
             zip.write(path, arcname=path)
+
+        zip.writestr('.ploomber-cloud', json.dumps({'force': force}))
 
 
 @auth_header
@@ -148,12 +151,12 @@ def upload_zipped_project(response):
     click.secho("Uploaded project, starting execution...", fg="green")
 
 
-def upload_project():
+def upload_project(force):
     if not Path("requirements.lock.txt").exists():
         raise ValueError("missing requirements.lock.txt")
 
     click.echo("Zipping project...")
-    zip_project()
+    zip_project(force)
     click.echo("Uploading project...")
     response = get_presigned_link()
     upload_zipped_project(response)

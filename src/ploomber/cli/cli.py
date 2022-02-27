@@ -349,8 +349,12 @@ def cloud():
 
 
 @cloud.command(name='build')
-def cloud_build():
-    pkg.upload_project()
+@click.option('-f',
+              '--force',
+              help='Force execution by ignoring status',
+              is_flag=True)
+def cloud_build(force):
+    pkg.upload_project(force)
 
 
 @cloud.command(name="list")
