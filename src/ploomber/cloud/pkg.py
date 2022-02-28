@@ -16,6 +16,7 @@ import requests
 import humanize
 
 from ploomber.table import Table
+from ploomber.spec import DAGSpec
 
 HOST = "https://lawqhyo5gl.execute-api.us-east-1.amazonaws.com/api/"
 
@@ -26,6 +27,16 @@ def _download_file(url):
     path.parent.mkdir(exist_ok=True, parents=True)
     print(f'Downloading {path}')
     urlretrieve(url, path)
+
+
+def _get(*args, **kwargs):
+    response = requests.get(*args, **kwargs)
+
+    if response.status_code >= 300:
+        raise ValueError(
+            f'Error (status: {response.status_code}): {response.json()}')
+
+    return response
 
 
 def download_from_presigned(presigned):
@@ -57,6 +68,9 @@ def auth_header(func):
             }
 
             return func(headers, *args, **kwargs)
+        else:
+            click.secho('Error: Missing api key', fg='red')
+            sys.exit(1)
 
     return wrapper
 
@@ -104,7 +118,7 @@ def run_detail(headers, run_id):
 
 @auth_header
 def products_list(headers):
-    res = requests.get(f"{HOST}/products", headers=headers).json()
+    res = _get(f"{HOST}/products", headers=headers).json()
 
     if res:
         print(Table.from_dicts([{'path': r} for r in res]))
@@ -152,6 +166,10 @@ def upload_zipped_project(response):
 
 
 def upload_project(force):
+    # TODO: use soopervisor's logic to auto find the pipeline
+    # check pipeline is working before submitting
+    DAGSpec('pipeline.yaml').to_dag().render()
+
     if not Path("requirements.lock.txt").exists():
         raise ValueError("missing requirements.lock.txt")
 

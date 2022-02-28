@@ -345,6 +345,8 @@ def nb():
 
 @cli.group()
 def cloud():
+    """Command-line for Ploomber Cloud
+    """
     pass
 
 
@@ -354,26 +356,42 @@ def cloud():
               help='Force execution by ignoring status',
               is_flag=True)
 def cloud_build(force):
+    """Build pipeline in the cloud
+    """
     pkg.upload_project(force)
 
 
 @cloud.command(name="list")
 def cloud_list():
+    """List cloud executions
+    """
     pkg.runs()
 
 
 @cloud.command(name="detail")
 @click.argument('run_id')
 def cloud_detail(run_id):
+    """Get details on a cloud execution
+
+    $ ploomber cloud detail {some-id}
+    """
     pkg.run_detail(run_id)
 
 
 @cloud.command(name="products")
 def cloud_products():
+    """List products in cloud workspace
+    """
     pkg.products_list()
 
 
 @cloud.command(name="download")
 @click.argument('pattern')
 def cloud_download(pattern):
+    """Download products from cloud workspace
+
+    Download all .csv files:
+
+    $ ploomber cloud download '*.csv'
+    """
     pkg.products_download(pattern)
