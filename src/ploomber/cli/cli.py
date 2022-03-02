@@ -389,7 +389,7 @@ def cloud_detail(run_id, watch):
     """
     if watch:
         idle = 5
-        timeout = 10 * 60 / idle
+        timeout = 10 * 60
         cumsum = 0
 
         while True:
