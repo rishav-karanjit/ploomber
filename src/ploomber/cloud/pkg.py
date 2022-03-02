@@ -194,7 +194,7 @@ def upload_zipped_project(response, verbose):
 def upload_project(force, github_number, github_owner, github_repo, verbose):
     # TODO: use soopervisor's logic to auto find the pipeline
     # check pipeline is working before submitting
-    DAGSpec('pipeline.yaml').to_dag().render(show_progress=verbose)
+    # DAGSpec('pipeline.yaml').to_dag().render(show_progress=verbose)
 
     if not Path("requirements.lock.txt").exists():
         raise ValueError("missing requirements.lock.txt")
