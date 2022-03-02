@@ -396,16 +396,17 @@ def cloud_detail(run_id, watch):
             click.clear()
             out = pkg.run_detail_print(run_id)
 
-            status = set([t['status'] for t in out])
+            status = set([t['status'] for t in out['tasks']])
 
-            if (status == {'finished'} or 'aborted' in status
-                    or 'failed' in status) or cumsum >= timeout:
+            if out['run'] != 'created' and (status == {'finished'}
+                                            or 'aborted' in status or 'failed'
+                                            in status) or cumsum >= timeout:
                 break
 
             time.sleep(idle)
             cumsum += idle
     else:
-        pkg.run_detail(run_id)
+        pkg.run_detail_print(run_id)
 
 
 @cloud.command(name="products")

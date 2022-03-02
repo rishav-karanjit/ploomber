@@ -123,13 +123,20 @@ def tasks_update(task_id, status):
 @auth_header
 def run_detail(headers, run_id):
     res = requests.get(f"{HOST}/runs/{run_id}", headers=headers).json()
-    return res['tasks']
+    return res
 
 
 def run_detail_print(run_id):
-    tasks = run_detail(run_id)
-    print(Table.from_dicts(tasks))
-    return tasks
+    out = run_detail(run_id)
+    tasks = out['tasks']
+    run = out['run']
+
+    if run['status'] == 'created':
+        print('Run created...')
+    else:
+        print(Table.from_dicts(tasks))
+
+    return out
 
 
 @auth_header
