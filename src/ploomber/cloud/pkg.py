@@ -183,7 +183,7 @@ def upload_zipped_project(response):
     click.secho("Uploaded project, starting execution...", fg="green")
 
 
-def upload_project(force, github_number):
+def upload_project(force, github_number, github_owner, github_repo):
     # TODO: use soopervisor's logic to auto find the pipeline
     # check pipeline is working before submitting
     DAGSpec('pipeline.yaml').to_dag().render()
@@ -191,7 +191,11 @@ def upload_project(force, github_number):
     if not Path("requirements.lock.txt").exists():
         raise ValueError("missing requirements.lock.txt")
 
-    runid = runs_new(dict(force=force, github_number=github_number))
+    runid = runs_new(
+        dict(force=force,
+             github_number=github_number,
+             github_owner=github_owner,
+             github_repo=github_repo))
 
     click.echo("Zipping project...")
     zip_project(force, runid, github_number)

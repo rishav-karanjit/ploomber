@@ -356,10 +356,12 @@ def cloud():
               help='Force execution by ignoring status',
               is_flag=True)
 @click.option('--github-number', help="Github's PR number", default=None)
-def cloud_build(force, github_number):
+@click.option('--github-owner', help="Github's owner", default=None)
+@click.option('--github-repo', help="Github's repo", default=None)
+def cloud_build(force, github_number, github_owner, github_repo):
     """Build pipeline in the cloud
     """
-    pkg.upload_project(force, github_number)
+    pkg.upload_project(force, github_number, github_owner, github_repo)
 
 
 @cloud.command(name="list")
