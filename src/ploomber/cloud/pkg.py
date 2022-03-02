@@ -123,7 +123,13 @@ def tasks_update(task_id, status):
 @auth_header
 def run_detail(headers, run_id):
     res = requests.get(f"{HOST}/runs/{run_id}", headers=headers).json()
-    print(Table.from_dicts(res['tasks']))
+    return res['tasks']
+
+
+def run_detail_print(run_id):
+    tasks = run_detail(run_id)
+    print(Table.from_dicts(tasks))
+    return tasks
 
 
 @auth_header

@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 import os
 import sys
@@ -373,12 +374,31 @@ def cloud_list():
 
 @cloud.command(name="detail")
 @click.argument('run_id')
-def cloud_detail(run_id):
+@click.option('--watch', is_flag=True)
+def cloud_detail(run_id, watch):
     """Get details on a cloud execution
 
     $ ploomber cloud detail {some-id}
     """
-    pkg.run_detail(run_id)
+    if watch:
+        idle = 5
+        timeout = 10 * 60 / idle
+        cumsum = 0
+
+        while True:
+            click.clear()
+            out = pkg.run_detail_print(run_id)
+
+            status = set([t['status'] for t in out])
+
+            if (status == {'finished'} or 'aborted' in status
+                    or 'failed' in status) or cumsum >= timeout:
+                break
+
+            time.sleep(idle)
+            cumsum += idle
+    else:
+        pkg.run_detail(run_id)
 
 
 @cloud.command(name="products")
