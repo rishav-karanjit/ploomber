@@ -148,9 +148,10 @@ def products_download(headers, pattern):
     download_from_presigned(res)
 
 
-def zip_project(force, runid, github_number):
+def zip_project(force, runid, github_number, verbose):
     if Path("project.zip").exists():
-        click.secho("Deleting existing project.zip...", fg="yellow")
+        if verbose:
+            click.secho("Deleting existing project.zip...", fg="yellow")
         Path("project.zip").unlink()
 
     files = glob("**/*", recursive=True)
@@ -176,7 +177,7 @@ def get_presigned_link(headers):
     return requests.get(f"{HOST}/upload", headers=headers).json()
 
 
-def upload_zipped_project(response):
+def upload_zipped_project(response, verbose):
     with open("project.zip", "rb") as f:
         files = {"file": f}
         http_response = requests.post(response["url"],
@@ -186,13 +187,14 @@ def upload_zipped_project(response):
     if http_response.status_code != 204:
         raise ValueError(f"An error happened: {http_response}")
 
-    click.secho("Uploaded project, starting execution...", fg="green")
+    if verbose:
+        click.secho("Uploaded project, starting execution...", fg="green")
 
 
-def upload_project(force, github_number, github_owner, github_repo):
+def upload_project(force, github_number, github_owner, github_repo, verbose):
     # TODO: use soopervisor's logic to auto find the pipeline
     # check pipeline is working before submitting
-    DAGSpec('pipeline.yaml').to_dag().render()
+    DAGSpec('pipeline.yaml').to_dag().render(show_progress=verbose)
 
     if not Path("requirements.lock.txt").exists():
         raise ValueError("missing requirements.lock.txt")
@@ -203,12 +205,18 @@ def upload_project(force, github_number, github_owner, github_repo):
              github_owner=github_owner,
              github_repo=github_repo))
 
-    click.echo("Zipping project...")
-    zip_project(force, runid, github_number)
+    if verbose:
+        click.echo("Zipping project...")
 
-    click.echo("Uploading project...")
+    zip_project(force, runid, github_number, verbose)
+
+    if verbose:
+        click.echo("Uploading project...")
+
     response = get_presigned_link()
 
-    upload_zipped_project(response)
+    upload_zipped_project(response, verbose)
 
     # TODO: if anything fails after runs_new, update the status to error
+
+    return runid

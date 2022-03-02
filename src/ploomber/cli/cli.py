@@ -359,10 +359,17 @@ def cloud():
 @click.option('--github-number', help="Github's PR number", default=None)
 @click.option('--github-owner', help="Github's owner", default=None)
 @click.option('--github-repo', help="Github's repo", default=None)
-def cloud_build(force, github_number, github_owner, github_repo):
+@click.option('--raw', is_flag=True)
+def cloud_build(force, github_number, github_owner, github_repo, raw):
     """Build pipeline in the cloud
     """
-    pkg.upload_project(force, github_number, github_owner, github_repo)
+    runid = pkg.upload_project(force,
+                               github_number,
+                               github_owner,
+                               github_repo,
+                               verbose=not raw)
+    if raw:
+        click.echo(runid)
 
 
 @cloud.command(name="list")
