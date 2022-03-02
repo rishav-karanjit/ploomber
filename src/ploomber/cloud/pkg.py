@@ -76,9 +76,19 @@ def auth_header(func):
 
 
 @auth_header
-def runs_new(headers, graph):
-    return requests.post(f"{HOST}/runs/new", headers=headers,
-                         json=graph).json()
+def runs_new(headers, metadata):
+    """Register a new run in the database
+    """
+    response = requests.post(f"{HOST}/runs", headers=headers, json=metadata)
+    return response.json()['runid']
+
+
+@auth_header
+def runs_update(headers, runid, graph):
+    """Update run status, store graph
+    """
+    return requests.put(f"{HOST}/runs/{runid}", headers=headers,
+                        json=graph).json()
 
 
 @auth_header
@@ -132,7 +142,7 @@ def products_download(headers, pattern):
     download_from_presigned(res)
 
 
-def zip_project(force):
+def zip_project(force, runid, github_number):
     if Path("project.zip").exists():
         click.secho("Deleting existing project.zip...", fg="yellow")
         Path("project.zip").unlink()
@@ -144,7 +154,15 @@ def zip_project(force):
         for path in files:
             zip.write(path, arcname=path)
 
-        zip.writestr('.ploomber-cloud', json.dumps({'force': force}))
+        # NOTE: it's weird that force is loaded from the buildspec but the
+        # other two parameters are actually loaded from dynamodb
+        zip.writestr(
+            '.ploomber-cloud',
+            json.dumps({
+                'force': force,
+                'runid': runid,
+                'github_number': github_number
+            }))
 
 
 @auth_header
@@ -165,7 +183,7 @@ def upload_zipped_project(response):
     click.secho("Uploaded project, starting execution...", fg="green")
 
 
-def upload_project(force):
+def upload_project(force, github_number):
     # TODO: use soopervisor's logic to auto find the pipeline
     # check pipeline is working before submitting
     DAGSpec('pipeline.yaml').to_dag().render()
@@ -173,8 +191,14 @@ def upload_project(force):
     if not Path("requirements.lock.txt").exists():
         raise ValueError("missing requirements.lock.txt")
 
+    runid = runs_new(dict(force=force, github_number=github_number))
+
     click.echo("Zipping project...")
-    zip_project(force)
+    zip_project(force, runid, github_number)
+
     click.echo("Uploading project...")
     response = get_presigned_link()
+
     upload_zipped_project(response)
+
+    # TODO: if anything fails after runs_new, update the status to error

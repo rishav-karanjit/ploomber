@@ -355,10 +355,11 @@ def cloud():
               '--force',
               help='Force execution by ignoring status',
               is_flag=True)
-def cloud_build(force):
+@click.option('--github-number', help="Github's PR number", default=None)
+def cloud_build(force, github_number):
     """Build pipeline in the cloud
     """
-    pkg.upload_project(force)
+    pkg.upload_project(force, github_number)
 
 
 @cloud.command(name="list")
